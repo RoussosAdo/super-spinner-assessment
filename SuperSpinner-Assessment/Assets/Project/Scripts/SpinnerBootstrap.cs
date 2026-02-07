@@ -8,6 +8,7 @@ namespace SuperSpinner.Core
     public sealed class SpinnerBootstrap : MonoBehaviour
     {
         [SerializeField] private SpinnerUiRefs ui;
+        [SerializeField] private SpinnerView view;
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new CompositeDisposable();
@@ -21,24 +22,28 @@ namespace SuperSpinner.Core
         }
 
         private void Start()
-        {
-            api.GetValues()
-                .ObserveOnMainThread()
-                .Subscribe(
-                    res =>
-                    {
-                        Debug.Log($"Spinner values received: {string.Join(", ", res.spinnerValues)}");
-                        ui.ShowLoading(false);
-                        ui.ShowSpinner(true);
-                    },
-                    err =>
-                    {
-                        Debug.LogError(err);
-                        // προσωρινά: μένουμε στο loading. Αργότερα βάζουμε Retry UI.
-                    }
-                )
-                .AddTo(cd);
-        }
+    {
+        api.GetValues()
+            .ObserveOnMainThread()
+            .Subscribe(
+                res =>
+                {
+                    Debug.Log($"Spinner values received: {string.Join(", ", res.spinnerValues)}");
+
+                    view.BuildReel(res.spinnerValues);
+
+                    ui.ShowLoading(false);
+                    ui.ShowSpinner(true);
+                },
+                err =>
+                {
+                    Debug.LogError(err);
+                    // TODO: Retry UI later
+                }
+            )
+            .AddTo(cd);
+    }
+
 
         private void OnDestroy()
         {

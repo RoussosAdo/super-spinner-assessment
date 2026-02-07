@@ -909,6 +909,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ui: {fileID: 63007709}
+  view: {fileID: 2142968422}
 --- !u!4 &829279422
 Transform:
   m_ObjectHideFlags: 0
@@ -1479,6 +1480,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2142968421}
+  - component: {fileID: 2142968422}
   m_Layer: 5
   m_Name: SpinnerRoot
   m_TagString: Untagged
@@ -1511,6 +1513,21 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 900, y: 900}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &2142968422
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142968420}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e45ec2b3fb52d274da6bc18c2708ae50, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  reelContent: {fileID: 519909225}
+  prizePrefab: {fileID: 7985107302265612708, guid: a42995071241c264e91d64837ede9fe8, type: 3}
+  itemSpacing: 120
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
