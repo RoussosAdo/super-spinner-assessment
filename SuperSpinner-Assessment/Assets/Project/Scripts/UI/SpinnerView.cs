@@ -8,55 +8,94 @@ namespace SuperSpinner.UI
     {
         [Header("Reel")]
         [SerializeField] private RectTransform reelContent;
+        [SerializeField] private RectTransform reelMask;
         [SerializeField] private TMP_Text prizePrefab;
 
         [Header("Layout")]
         [SerializeField] private float itemSpacing = 120f;
+        [SerializeField] private int idleStartIndex = 1; // 0=1000, 1=2000
 
         private readonly List<TMP_Text> items = new();
+        private readonly List<int> builtValues = new();
+
+        public RectTransform ReelContent => reelContent;
+        public RectTransform ReelMask => reelMask;
+
+        public float ItemSpacing => itemSpacing;
+        public int UniqueCount { get; private set; }
+        public float LoopHeight => UniqueCount * itemSpacing;
 
         public void BuildReel(IReadOnlyList<int> values)
         {
             Clear();
 
-            //  3 copies για άπειρο scrolling feeling
-            var extended = new List<int>();
+            UniqueCount = values.Count;
+
+            // 3 copies
+            var extended = new List<int>(values.Count * 3);
             extended.AddRange(values);
             extended.AddRange(values);
             extended.AddRange(values);
 
             for (int i = 0; i < extended.Count; i++)
             {
+                int v = extended[i];
+                builtValues.Add(v);
+
                 var txt = Instantiate(prizePrefab, reelContent);
-                txt.text = extended[i].ToString("N0");
+                txt.text = v.ToString("N0");
                 txt.rectTransform.anchoredPosition = new Vector2(0, -i * itemSpacing);
                 items.Add(txt);
             }
 
-            // Reset θέση
-            reelContent.anchoredPosition = Vector2.zero;
+            SetIdlePosition();
         }
 
-        public float GetTargetPositionForValue(int value)
+        public void SetIdlePosition()
         {
-            // Βρίσκουμε το index 
-            for (int i = 0; i < items.Count; i++)
+            if (UniqueCount <= 0) return;
+
+            float y = idleStartIndex * itemSpacing;
+            y = Mod(y, LoopHeight);
+
+            reelContent.anchoredPosition = new Vector2(0f, y);
+        }
+
+        // target y πάντα μέσα σε [0, LoopHeight)
+        public float GetTargetModYForValue(int value)
+        {
+            if (UniqueCount <= 0) return 0f;
+
+            // Πρώτο block values (0..UniqueCount-1)
+            for (int i = 0; i < UniqueCount; i++)
             {
-                if (items[i].text.Replace(",", "") == value.ToString())
+                if (builtValues[i] == value)
                 {
-                    return i * itemSpacing;
+                    float y = i * itemSpacing;
+                    return Mod(y, LoopHeight);
                 }
             }
 
-            return 0;
+            return 0f;
+        }
+
+        public static float Mod(float a, float m)
+        {
+            if (m <= 0.0001f) return 0f;
+            float r = a % m;
+            return r < 0 ? r + m : r;
         }
 
         private void Clear()
         {
             foreach (var t in items)
+            {
                 if (t) Destroy(t.gameObject);
+            }
 
             items.Clear();
+            builtValues.Clear();
+            UniqueCount = 0;
         }
     }
 }

@@ -9,6 +9,7 @@ namespace SuperSpinner.Core
     {
         [SerializeField] private SpinnerUiRefs ui;
         [SerializeField] private SpinnerView view;
+        [SerializeField] private SpinnerFlow flow;
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new CompositeDisposable();
@@ -17,33 +18,40 @@ namespace SuperSpinner.Core
         {
             api = new SpinnerApiService();
 
-            ui.ShowSpinner(false);
-            ui.ShowLoading(true);
+            if (ui == null) Debug.LogError("SpinnerBootstrap: ui is not assigned.");
+            if (view == null) Debug.LogError("SpinnerBootstrap: view is not assigned.");
+            if (flow == null) Debug.LogError("SpinnerBootstrap: flow is not assigned.");
+
+            ui?.ShowSpinner(false);
+            ui?.ShowLoading(true);
         }
 
         private void Start()
-    {
-        api.GetValues()
-            .ObserveOnMainThread()
-            .Subscribe(
-                res =>
-                {
-                    Debug.Log($"Spinner values received: {string.Join(", ", res.spinnerValues)}");
+        {
+            api.GetValues()
+                .ObserveOnMainThread()
+                .Subscribe(
+                    res =>
+                    {
+                        Debug.Log($"Spinner values received: {string.Join(", ", res.spinnerValues)}");
 
-                    view.BuildReel(res.spinnerValues);
+                        // 1) Build reel
+                        view.BuildReel(res.spinnerValues);
 
-                    ui.ShowLoading(false);
-                    ui.ShowSpinner(true);
-                },
-                err =>
-                {
-                    Debug.LogError(err);
-                    // TODO: Retry UI later
-                }
-            )
-            .AddTo(cd);
-    }
+                        // 2) Sync travel with idle position
+                        flow.ResetTravelToCurrent();
 
+                        // 3) Show UI
+                        ui?.ShowLoading(false);
+                        ui?.ShowSpinner(true);
+
+                        // 4) Enable tap
+                        flow?.EnableTap();
+                    },
+                    err => Debug.LogError(err)
+                )
+                .AddTo(cd);
+        }
 
         private void OnDestroy()
         {
