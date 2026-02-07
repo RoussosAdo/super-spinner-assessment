@@ -1,0 +1,962 @@
+fileFormatVersion: 2
+guid: d07c0cfc917981b4d8942d04e4113763
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: -4945870849219724444
+    second: spinner_red_ring_0
+  - first:
+      213: -3869111050664973149
+    second: spinner_red_ring_1
+  - first:
+      213: -2049276771839747871
+    second: spinner_red_ring_2
+  - first:
+      213: 3510594668146306465
+    second: spinner_red_ring_3
+  - first:
+      213: 5660582574496293153
+    second: spinner_red_ring_4
+  - first:
+      213: 6424875167829804333
+    second: spinner_red_ring_5
+  - first:
+      213: -6601746345914550275
+    second: spinner_red_ring_6
+  - first:
+      213: -2964189497744064735
+    second: spinner_red_ring_7
+  - first:
+      213: 864529801084661638
+    second: spinner_red_ring_8
+  - first:
+      213: 2480453827856464633
+    second: spinner_red_ring_9
+  - first:
+      213: -5450031538811148237
+    second: spinner_red_ring_10
+  - first:
+      213: 5680640946039579927
+    second: spinner_red_ring_11
+  - first:
+      213: -4427633283225607502
+    second: spinner_red_ring_12
+  - first:
+      213: -646655468274318353
+    second: spinner_red_ring_13
+  - first:
+      213: 5534898534708658434
+    second: spinner_red_ring_14
+  - first:
+      213: 4495280531382967750
+    second: spinner_red_ring_15
+  - first:
+      213: -6925330478427614728
+    second: spinner_red_ring_16
+  - first:
+      213: -1065145395790315781
+    second: spinner_red_ring_17
+  - first:
+      213: -6217714301556404361
+    second: spinner_red_ring_18
+  - first:
+      213: 6605576708073086253
+    second: spinner_red_ring_19
+  - first:
+      213: -5432720269495393191
+    second: spinner_red_ring_20
+  - first:
+      213: -1902505601518652542
+    second: spinner_red_ring_21
+  - first:
+      213: 9043833145938258000
+    second: spinner_red_ring_22
+  - first:
+      213: 6679906397382231516
+    second: spinner_red_ring_23
+  - first:
+      213: -1752647151888996516
+    second: spinner_red_ring_24
+  - first:
+      213: -6551128918723790620
+    second: spinner_red_ring_25
+  - first:
+      213: 1262715079148649929
+    second: spinner_red_ring_26
+  - first:
+      213: 9216378395753082046
+    second: spinner_red_ring_27
+  - first:
+      213: 4300212589061498242
+    second: spinner_red_ring_28
+  - first:
+      213: 6894937791267524346
+    second: spinner_red_ring_29
+  - first:
+      213: 6780989394722761170
+    second: spinner_red_ring_30
+  - first:
+      213: -1096930091587426856
+    second: spinner_red_ring_31
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: spinner_red_ring_0
+      rect:
+        serializedVersion: 2
+        x: 290
+        y: 847
+        width: 41
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 46b7c4fbaacbc5bb0800000000000000
+      internalID: -4945870849219724444
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_1
+      rect:
+        serializedVersion: 2
+        x: 373
+        y: 872
+        width: 35
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3ac6394bff72e4ac0800000000000000
+      internalID: -3869111050664973149
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_2
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 879
+        width: 36
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1e8580032a18f83e0800000000000000
+      internalID: -2049276771839747871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_3
+      rect:
+        serializedVersion: 2
+        x: 540
+        y: 872
+        width: 35
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1adad31304328b030800000000000000
+      internalID: 3510594668146306465
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_4
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 848
+        width: 40
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1212e964cdd6e8e40800000000000000
+      internalID: 5660582574496293153
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_5
+      rect:
+        serializedVersion: 2
+        x: 213
+        y: 810
+        width: 43
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2549b8bcedb92950800000000000000
+      internalID: 6424875167829804333
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_6
+      rect:
+        serializedVersion: 2
+        x: 693
+        y: 812
+        width: 42
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df7b78a0da2e164a0800000000000000
+      internalID: -6601746345914550275
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_7
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 757
+        width: 54
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 12f75045b551dd6d0800000000000000
+      internalID: -2964189497744064735
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_8
+      rect:
+        serializedVersion: 2
+        x: 757
+        y: 757
+        width: 54
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 68fe36b064d6ffb00800000000000000
+      internalID: 864529801084661638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_9
+      rect:
+        serializedVersion: 2
+        x: 85
+        y: 693
+        width: 55
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9fa742b4d975c6220800000000000000
+      internalID: 2480453827856464633
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_10
+      rect:
+        serializedVersion: 2
+        x: 810
+        y: 696
+        width: 55
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3386c72e0399d54b0800000000000000
+      internalID: -5450031538811148237
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_11
+      rect:
+        serializedVersion: 2
+        x: 40
+        y: 621
+        width: 64
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 7156a35d7d0b5de40800000000000000
+      internalID: 5680640946039579927
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_12
+      rect:
+        serializedVersion: 2
+        x: 847
+        y: 621
+        width: 64
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2b224adccf2ed82c0800000000000000
+      internalID: -4427633283225607502
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_13
+      rect:
+        serializedVersion: 2
+        x: 16
+        y: 540
+        width: 64
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe30279174e9607f0800000000000000
+      internalID: -646655468274318353
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_14
+      rect:
+        serializedVersion: 2
+        x: 872
+        y: 544
+        width: 63
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 201c32564e8efcc40800000000000000
+      internalID: 5534898534708658434
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_15
+      rect:
+        serializedVersion: 2
+        x: 5
+        y: 458
+        width: 68
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6cd9fc683d1726e30800000000000000
+      internalID: 4495280531382967750
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_16
+      rect:
+        serializedVersion: 2
+        x: 879
+        y: 458
+        width: 68
+        height: 36
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8f1d2213f9844ef90800000000000000
+      internalID: -6925330478427614728
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_17
+      rect:
+        serializedVersion: 2
+        x: 17
+        y: 373
+        width: 63
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bfe76c9e7e7d731f0800000000000000
+      internalID: -1065145395790315781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_18
+      rect:
+        serializedVersion: 2
+        x: 872
+        y: 377
+        width: 64
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 77f4ddc19cd36b9a0800000000000000
+      internalID: -6217714301556404361
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_19
+      rect:
+        serializedVersion: 2
+        x: 41
+        y: 290
+        width: 64
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d2d5a45a409bbab50800000000000000
+      internalID: 6605576708073086253
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_20
+      rect:
+        serializedVersion: 2
+        x: 848
+        y: 291
+        width: 64
+        height: 40
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 954a9acd2b91b94b0800000000000000
+      internalID: -5432720269495393191
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_21
+      rect:
+        serializedVersion: 2
+        x: 87
+        y: 213
+        width: 55
+        height: 43
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2833a4e3c31f895e0800000000000000
+      internalID: -1902505601518652542
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_22
+      rect:
+        serializedVersion: 2
+        x: 812
+        y: 217
+        width: 55
+        height: 42
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 058ad877456228d70800000000000000
+      internalID: 9043833145938258000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_23
+      rect:
+        serializedVersion: 2
+        x: 141
+        y: 141
+        width: 54
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cd5c3dc0a7bc3bc50800000000000000
+      internalID: 6679906397382231516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_24
+      rect:
+        serializedVersion: 2
+        x: 696
+        y: 87
+        width: 43
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c576e0783b85da7e0800000000000000
+      internalID: -1752647151888996516
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_25
+      rect:
+        serializedVersion: 2
+        x: 757
+        y: 141
+        width: 54
+        height: 54
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4e8fda135f6b515a0800000000000000
+      internalID: -6551128918723790620
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_26
+      rect:
+        serializedVersion: 2
+        x: 217
+        y: 85
+        width: 42
+        height: 55
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9cd3f21aca0168110800000000000000
+      internalID: 1262715079148649929
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_27
+      rect:
+        serializedVersion: 2
+        x: 291
+        y: 40
+        width: 40
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ebc627a025727ef70800000000000000
+      internalID: 9216378395753082046
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_28
+      rect:
+        serializedVersion: 2
+        x: 621
+        y: 41
+        width: 41
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2856ca5f09c6dab30800000000000000
+      internalID: 4300212589061498242
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_29
+      rect:
+        serializedVersion: 2
+        x: 377
+        y: 16
+        width: 35
+        height: 64
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: afecae4e36dbfaf50800000000000000
+      internalID: 6894937791267524346
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_30
+      rect:
+        serializedVersion: 2
+        x: 458
+        y: 5
+        width: 36
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2d924226de9ea1e50800000000000000
+      internalID: 6780989394722761170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: spinner_red_ring_31
+      rect:
+        serializedVersion: 2
+        x: 544
+        y: 17
+        width: 35
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8d5ae7bb4ebe6c0f0800000000000000
+      internalID: -1096930091587426856
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      spinner_red_ring_0: -4945870849219724444
+      spinner_red_ring_1: -3869111050664973149
+      spinner_red_ring_10: -5450031538811148237
+      spinner_red_ring_11: 5680640946039579927
+      spinner_red_ring_12: -4427633283225607502
+      spinner_red_ring_13: -646655468274318353
+      spinner_red_ring_14: 5534898534708658434
+      spinner_red_ring_15: 4495280531382967750
+      spinner_red_ring_16: -6925330478427614728
+      spinner_red_ring_17: -1065145395790315781
+      spinner_red_ring_18: -6217714301556404361
+      spinner_red_ring_19: 6605576708073086253
+      spinner_red_ring_2: -2049276771839747871
+      spinner_red_ring_20: -5432720269495393191
+      spinner_red_ring_21: -1902505601518652542
+      spinner_red_ring_22: 9043833145938258000
+      spinner_red_ring_23: 6679906397382231516
+      spinner_red_ring_24: -1752647151888996516
+      spinner_red_ring_25: -6551128918723790620
+      spinner_red_ring_26: 1262715079148649929
+      spinner_red_ring_27: 9216378395753082046
+      spinner_red_ring_28: 4300212589061498242
+      spinner_red_ring_29: 6894937791267524346
+      spinner_red_ring_3: 3510594668146306465
+      spinner_red_ring_30: 6780989394722761170
+      spinner_red_ring_31: -1096930091587426856
+      spinner_red_ring_4: 5660582574496293153
+      spinner_red_ring_5: 6424875167829804333
+      spinner_red_ring_6: -6601746345914550275
+      spinner_red_ring_7: -2964189497744064735
+      spinner_red_ring_8: 864529801084661638
+      spinner_red_ring_9: 2480453827856464633
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
