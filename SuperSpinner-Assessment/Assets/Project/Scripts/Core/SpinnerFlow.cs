@@ -3,6 +3,7 @@ using UniRx;
 using UnityEngine;
 using SuperSpinner.Networking;
 using SuperSpinner.UI;
+using TMPro;
 
 namespace SuperSpinner.Core
 {
@@ -13,25 +14,38 @@ namespace SuperSpinner.Core
         [SerializeField] private RectTransform spinnerRoot;
         [SerializeField] private GameObject tapOverlay;
 
+        [Header("Result UI")]
+        [SerializeField] private TMP_Text resultText;
+        [SerializeField] private float resultFadeIn = 0.25f;
+        [SerializeField] private float resultHoldSeconds = 1.0f;
+
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
 
-        // Virtual “total travel” που αυξάνει συνεχώς
         private float travel;
+        private bool isSpinning;
 
         private void Awake()
         {
             api = new SpinnerApiService();
+            HideResultInstant();
         }
 
         public void EnableTap()
         {
             if (tapOverlay != null)
                 tapOverlay.SetActive(true);
+
+            isSpinning = false;
         }
 
         public void OnTap()
         {
+            if (isSpinning) return;
+
+            isSpinning = true;
+            HideResultInstant();
+
             if (tapOverlay != null)
                 tapOverlay.SetActive(false);
 
@@ -40,7 +54,6 @@ namespace SuperSpinner.Core
                 .OnComplete(StartSpin);
         }
 
-        // Καλείται από Bootstrap αμέσως μετά το BuildReel() + SetIdlePosition()
         public void ResetTravelToCurrent()
         {
             if (view == null) return;
@@ -62,7 +75,12 @@ namespace SuperSpinner.Core
                         Debug.Log("SPIN RESULT: " + res.spinnerValue);
                         PlaySpinAnimation(res.spinnerValue);
                     },
-                    err => Debug.LogError(err)
+                    err =>
+                    {
+                        Debug.LogError(err);
+                        isSpinning = false;
+                        EnableTap();
+                    }
                 )
                 .AddTo(cd);
         }
@@ -71,14 +89,18 @@ namespace SuperSpinner.Core
         {
             if (view == null)
             {
-                Debug.LogError("SpinnerFlow: view is NULL (assign SpinnerView in Inspector).");
+                Debug.LogError("SpinnerFlow: view is NULL.");
+                isSpinning = false;
+                EnableTap();
                 return;
             }
 
             float loopH = view.LoopHeight;
             if (loopH <= 0.01f)
             {
-                Debug.LogError("SpinnerFlow: LoopHeight invalid. Check UniqueCount/itemSpacing.");
+                Debug.LogError("SpinnerFlow: LoopHeight invalid.");
+                isSpinning = false;
+                EnableTap();
                 return;
             }
 
@@ -92,36 +114,92 @@ namespace SuperSpinner.Core
             float endTravel = travel + loops * loopH + deltaToTarget;
 
             DOTween.Kill(view.ReelContent);
+            DOTween.Kill(spinnerRoot);
+            if (resultText != null) DOTween.Kill(resultText);
 
             Sequence s = DOTween.Sequence();
 
+            // Spin
             s.Append(DOTween.To(
-                    () => travel,
-                    x =>
-                    {
-                        travel = x;
-                        float y = SpinnerView.Mod(travel, loopH);
-                        view.ReelContent.anchoredPosition = new Vector2(0f, y);
-                    },
-                    endTravel,
-                    2.8f
-                ).SetEase(Ease.InOutCubic)
-            );
+                () => travel,
+                x =>
+                {
+                    travel = x;
+                    float y = SpinnerView.Mod(travel, loopH);
+                    view.ReelContent.anchoredPosition = new Vector2(0f, y);
+                },
+                endTravel,
+                2.8f
+            ).SetEase(Ease.InOutCubic));
 
+            // Micro settle
             s.Append(DOTween.To(
-                    () => travel,
-                    x =>
-                    {
-                        travel = x;
-                        float y = SpinnerView.Mod(travel, loopH);
-                        view.ReelContent.anchoredPosition = new Vector2(0f, y);
-                    },
-                    endTravel,
-                    0.25f
-                ).SetEase(Ease.OutQuad)
-            );
+                () => travel,
+                x =>
+                {
+                    travel = x;
+                    float y = SpinnerView.Mod(travel, loopH);
+                    view.ReelContent.anchoredPosition = new Vector2(0f, y);
+                },
+                endTravel,
+                0.25f
+            ).SetEase(Ease.OutQuad));
 
+            // Show result
+            s.AppendCallback(() => ShowResult(result));
+
+            // Zoom out
             s.Append(spinnerRoot.DOScale(1f, 0.3f).SetEase(Ease.OutQuad));
+
+            // Hold result λίγο (να προλάβει να φανεί)
+            s.AppendInterval(resultHoldSeconds);
+
+            // Re-enable tap
+            s.AppendCallback(() =>
+            {
+                HideResultInstant();      //  κρύβει το result
+                isSpinning = false;
+                EnableTap();              //  μετά δείχνει tap overlay
+            });
+
+        }
+
+        private void ShowResult(int result)
+        {
+            if (resultText == null) return;
+
+            // Βεβαιώσου ότι δεν σε σκεπάζει το Tap overlay
+            if (tapOverlay != null) tapOverlay.SetActive(false);
+
+            resultText.gameObject.SetActive(true);
+            resultText.text = result.ToString("N0");
+
+            // start invisible
+            var c = resultText.color;
+            c.a = 0f;
+            resultText.color = c;
+
+            // Fade + pulse
+            Sequence r = DOTween.Sequence();
+            r.Append(resultText.DOFade(1f, resultFadeIn).SetEase(Ease.OutQuad));
+
+            var rt = resultText.rectTransform;
+            rt.localScale = Vector3.one * 0.9f;
+            r.Join(rt.DOScale(1.08f, 0.18f).SetEase(Ease.OutBack));
+            r.Append(rt.DOScale(1.0f, 0.12f).SetEase(Ease.OutQuad));
+        }
+
+        private void HideResultInstant()
+        {
+            if (resultText == null) return;
+
+            resultText.text = "";
+            var c = resultText.color;
+            c.a = 0f;
+            resultText.color = c;
+
+            // Μπορείς να το αφήσεις active, δεν πειράζει
+            resultText.gameObject.SetActive(true);
         }
 
         private void OnDestroy()
