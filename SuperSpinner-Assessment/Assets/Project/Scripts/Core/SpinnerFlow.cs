@@ -9,6 +9,8 @@ namespace SuperSpinner.Core
 {
     public sealed class SpinnerFlow : MonoBehaviour
     {
+        private enum State { Idle, Spinning, ShowingResult }
+
         [Header("Refs")]
         [SerializeField] private SpinnerView view;
         [SerializeField] private RectTransform spinnerRoot;
@@ -16,40 +18,64 @@ namespace SuperSpinner.Core
 
         [Header("Result UI")]
         [SerializeField] private TMP_Text resultText;
-        [SerializeField] private float resultFadeIn = 0.25f;
-        [SerializeField] private float resultHoldSeconds = 1.0f;
+
+        [Header("Tuning")]
+        [SerializeField] private int loops = 6;
+        [SerializeField] private float spinDuration = 2.8f;
+        [SerializeField] private float settleDuration = 0.25f;
+        [SerializeField] private float zoomInScale = 1.15f;
+        [SerializeField] private float zoomInDuration = 0.35f;
+        [SerializeField] private float zoomOutDuration = 0.30f;
+
+        [Header("Result Anim")]
+        [SerializeField] private float resultFadeIn = 0.20f;
+        [SerializeField] private float resultPulseUp = 1.10f;
+        [SerializeField] private float resultPulseIn = 0.18f;
+        [SerializeField] private float resultPulseOut = 0.12f;
+
+        [Header("End Micro FX")]
+        [SerializeField] private float endShakeDuration = 0.18f;
+        [SerializeField] private float endShakeStrength = 10f;
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
 
         private float travel;
-        private bool isSpinning;
+        private State state = State.Idle;
 
         private void Awake()
         {
             api = new SpinnerApiService();
+            SetTapVisible(true);
             HideResultInstant();
+            state = State.Idle;
         }
 
         public void EnableTap()
         {
-            if (tapOverlay != null)
-                tapOverlay.SetActive(true);
-
-            isSpinning = false;
+            state = State.Idle;
+            SetTapVisible(true);
         }
 
         public void OnTap()
         {
-            if (isSpinning) return;
+            // Το tap απλά κλείνει το αποτέλεσμα και ξαναμπαίνει idle
+            if (state == State.ShowingResult)
+            {
+                HideResultInstant();
+                EnableTap();
+                return;
+            }
 
-            isSpinning = true;
+            if (state == State.Spinning) return;
+
+            // Idle
+            state = State.Spinning;
+            SetTapVisible(false);
             HideResultInstant();
 
-            if (tapOverlay != null)
-                tapOverlay.SetActive(false);
-
-            spinnerRoot.DOScale(1.15f, 0.35f)
+            spinnerRoot.DOKill();
+            spinnerRoot.DOScale(zoomInScale, zoomInDuration)
                 .SetEase(Ease.OutBack)
                 .OnComplete(StartSpin);
         }
@@ -78,8 +104,8 @@ namespace SuperSpinner.Core
                     err =>
                     {
                         Debug.LogError(err);
-                        isSpinning = false;
-                        EnableTap();
+                        state = State.Idle;
+                        SetTapVisible(true);
                     }
                 )
                 .AddTo(cd);
@@ -90,8 +116,8 @@ namespace SuperSpinner.Core
             if (view == null)
             {
                 Debug.LogError("SpinnerFlow: view is NULL.");
-                isSpinning = false;
-                EnableTap();
+                state = State.Idle;
+                SetTapVisible(true);
                 return;
             }
 
@@ -99,8 +125,8 @@ namespace SuperSpinner.Core
             if (loopH <= 0.01f)
             {
                 Debug.LogError("SpinnerFlow: LoopHeight invalid.");
-                isSpinning = false;
-                EnableTap();
+                state = State.Idle;
+                SetTapVisible(true);
                 return;
             }
 
@@ -110,16 +136,13 @@ namespace SuperSpinner.Core
             float deltaToTarget = targetMod - currentMod;
             if (deltaToTarget < 0) deltaToTarget += loopH;
 
-            int loops = 6;
-            float endTravel = travel + loops * loopH + deltaToTarget;
+            float endTravel = travel + (loops * loopH) + deltaToTarget;
 
-            DOTween.Kill(view.ReelContent);
-            DOTween.Kill(spinnerRoot);
-            if (resultText != null) DOTween.Kill(resultText);
+            view.ReelContent.DOKill();
 
             Sequence s = DOTween.Sequence();
 
-            // Spin
+            // SPIN
             s.Append(DOTween.To(
                 () => travel,
                 x =>
@@ -129,10 +152,10 @@ namespace SuperSpinner.Core
                     view.ReelContent.anchoredPosition = new Vector2(0f, y);
                 },
                 endTravel,
-                2.8f
+                spinDuration
             ).SetEase(Ease.InOutCubic));
 
-            // Micro settle
+            // SETTLE (micro)
             s.Append(DOTween.To(
                 () => travel,
                 x =>
@@ -142,64 +165,68 @@ namespace SuperSpinner.Core
                     view.ReelContent.anchoredPosition = new Vector2(0f, y);
                 },
                 endTravel,
-                0.25f
+                settleDuration
             ).SetEase(Ease.OutQuad));
 
-            // Show result
-            s.AppendCallback(() => ShowResult(result));
-
-            // Zoom out
-            s.Append(spinnerRoot.DOScale(1f, 0.3f).SetEase(Ease.OutQuad));
-
-            // Hold result λίγο (να προλάβει να φανεί)
-            s.AppendInterval(resultHoldSeconds);
-
-            // Re-enable tap
+            // END FX
             s.AppendCallback(() =>
             {
-                HideResultInstant();      //  κρύβει το result
-                isSpinning = false;
-                EnableTap();              //  μετά δείχνει tap overlay
+                spinnerRoot.DOKill();
+                spinnerRoot.DOShakeAnchorPos(endShakeDuration, endShakeStrength, 12, 90, false, true);
+                ShowResult(result);
             });
 
+            // ZOOM OUT
+            s.Append(spinnerRoot.DOScale(1f, zoomOutDuration).SetEase(Ease.OutQuad));
+
+            // State -> ShowingResult (μένει μέχρι να ξαναπατήσει)
+            s.AppendCallback(() => state = State.ShowingResult);
         }
 
         private void ShowResult(int result)
         {
             if (resultText == null) return;
 
-            // Βεβαιώσου ότι δεν σε σκεπάζει το Tap overlay
-            if (tapOverlay != null) tapOverlay.SetActive(false);
+            resultText.DOKill();
+            resultText.rectTransform.DOKill();
 
             resultText.gameObject.SetActive(true);
             resultText.text = result.ToString("N0");
 
-            // start invisible
+            // Fade in
             var c = resultText.color;
             c.a = 0f;
             resultText.color = c;
 
-            // Fade + pulse
+            // Pulse
+            var rt = resultText.rectTransform;
+            rt.localScale = Vector3.one * 0.92f;
+
             Sequence r = DOTween.Sequence();
             r.Append(resultText.DOFade(1f, resultFadeIn).SetEase(Ease.OutQuad));
-
-            var rt = resultText.rectTransform;
-            rt.localScale = Vector3.one * 0.9f;
-            r.Join(rt.DOScale(1.08f, 0.18f).SetEase(Ease.OutBack));
-            r.Append(rt.DOScale(1.0f, 0.12f).SetEase(Ease.OutQuad));
+            r.Join(rt.DOScale(resultPulseUp, resultPulseIn).SetEase(Ease.OutBack));
+            r.Append(rt.DOScale(1f, resultPulseOut).SetEase(Ease.OutQuad));
         }
 
         private void HideResultInstant()
         {
             if (resultText == null) return;
 
+            resultText.DOKill();
+            resultText.rectTransform.DOKill();
+
             resultText.text = "";
             var c = resultText.color;
             c.a = 0f;
             resultText.color = c;
 
-            // Μπορείς να το αφήσεις active, δεν πειράζει
-            resultText.gameObject.SetActive(true);
+            resultText.gameObject.SetActive(false);
+        }
+
+        private void SetTapVisible(bool visible)
+        {
+            if (tapOverlay != null)
+                tapOverlay.SetActive(visible);
         }
 
         private void OnDestroy()
