@@ -156,6 +156,7 @@ namespace SuperSpinner.Core
                     travel = x;
                     float y = SpinnerView.Mod(travel, loopH);
                     view.ReelContent.anchoredPosition = new Vector2(0f, y);
+                    view.UpdateHighlight();
                 },
                 endTravel,
                 spinDuration
@@ -169,6 +170,7 @@ namespace SuperSpinner.Core
                     travel = x;
                     float y = SpinnerView.Mod(travel, loopH);
                     view.ReelContent.anchoredPosition = new Vector2(0f, y);
+                    view.UpdateHighlight();
                 },
                 endTravel,
                 settleDuration
@@ -194,7 +196,7 @@ namespace SuperSpinner.Core
             // ZOOM OUT
             s.Append(spinnerRoot.DOScale(1f, zoomOutDuration).SetEase(Ease.OutQuad));
 
-            // State -> ShowingResult (μένει μέχρι να ξαναπατήσει)
+            // State -> ShowingResult 
             s.AppendCallback(() => state = State.ShowingResult);
         }
 

@@ -15,6 +15,11 @@ namespace SuperSpinner.UI
         [SerializeField] private float itemSpacing = 120f;
         [SerializeField] private int idleStartIndex = 1; // 0=1000, 1=2000
 
+        [Header("Highlight")]
+        [SerializeField, Range(0f, 1f)] private float sideAlpha = 0.45f;
+        [SerializeField] private float centerScale = 1.12f;
+        [SerializeField] private float sideScale = 0.95f;
+
         private readonly List<TMP_Text> items = new();
         private readonly List<int> builtValues = new();
 
@@ -31,7 +36,6 @@ namespace SuperSpinner.UI
 
             UniqueCount = values.Count;
 
-            // 3 copies
             var extended = new List<int>(values.Count * 3);
             extended.AddRange(values);
             extended.AddRange(values);
@@ -49,6 +53,7 @@ namespace SuperSpinner.UI
             }
 
             SetIdlePosition();
+            UpdateHighlight(); 
         }
 
         public void SetIdlePosition()
@@ -61,12 +66,10 @@ namespace SuperSpinner.UI
             reelContent.anchoredPosition = new Vector2(0f, y);
         }
 
-        // target y πάντα μέσα σε [0, LoopHeight)
         public float GetTargetModYForValue(int value)
         {
             if (UniqueCount <= 0) return 0f;
 
-            // Πρώτο block values (0..UniqueCount-1)
             for (int i = 0; i < UniqueCount; i++)
             {
                 if (builtValues[i] == value)
@@ -77,6 +80,35 @@ namespace SuperSpinner.UI
             }
 
             return 0f;
+        }
+
+        public void UpdateHighlight()
+        {
+            if (items.Count == 0 || UniqueCount <= 0) return;
+
+            // Με βάση το current reelContent y βρίσκουμε ποιο index είναι στο κέντρο
+            float y = reelContent.anchoredPosition.y;
+            int centerIndex = Mathf.RoundToInt(y / itemSpacing) % UniqueCount;
+            if (centerIndex < 0) centerIndex += UniqueCount;
+
+            //  3 copies, το κέντρο θα βρίσκεται σε κάποια από τα 3 zones.
+            //  highlight σε ολα τα copies που αντιστοιχούν στο ίδιο index.
+            for (int i = 0; i < items.Count; i++)
+            {
+                if (items[i] == null) continue;
+
+                int mod = i % UniqueCount;
+                bool isCenter = (mod == centerIndex);
+
+                var t = items[i];
+                var c = t.color;
+                c.a = isCenter ? 1f : sideAlpha;
+                t.color = c;
+
+                t.rectTransform.localScale = isCenter
+                    ? Vector3.one * centerScale
+                    : Vector3.one * sideScale;
+            }
         }
 
         public static float Mod(float a, float m)
