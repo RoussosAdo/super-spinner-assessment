@@ -36,6 +36,11 @@ namespace SuperSpinner.Core
         [Header("End Micro FX")]
         [SerializeField] private float endShakeDuration = 0.18f;
         [SerializeField] private float endShakeStrength = 10f;
+        [SerializeField] private SuperSpinner.Audio.SpinnerAudio audioFx;
+        [SerializeField] private CanvasGroup leftPointer;
+        [SerializeField] private CanvasGroup rightPointer;
+
+
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
@@ -71,6 +76,7 @@ namespace SuperSpinner.Core
 
             // Idle
             state = State.Spinning;
+            audioFx?.PlaySpinLoop();
             SetTapVisible(false);
             HideResultInstant();
 
@@ -171,10 +177,19 @@ namespace SuperSpinner.Core
             // END FX
             s.AppendCallback(() =>
             {
+                FlashPointer(leftPointer);
+                FlashPointer(rightPointer);
+
                 spinnerRoot.DOKill();
                 spinnerRoot.DOShakeAnchorPos(endShakeDuration, endShakeStrength, 12, 90, false, true);
+                audioFx?.StopSpinLoop();
+                audioFx?.PlayStop();
+                audioFx?.PlayWin();
+
                 ShowResult(result);
             });
+
+            
 
             // ZOOM OUT
             s.Append(spinnerRoot.DOScale(1f, zoomOutDuration).SetEase(Ease.OutQuad));
@@ -182,6 +197,15 @@ namespace SuperSpinner.Core
             // State -> ShowingResult (μένει μέχρι να ξαναπατήσει)
             s.AppendCallback(() => state = State.ShowingResult);
         }
+
+        private void FlashPointer(CanvasGroup cg)
+        {
+            if (cg == null) return;
+            cg.DOKill();
+            cg.alpha = 1f;
+            cg.DOFade(0.2f, 0.06f).SetLoops(6, LoopType.Yoyo);
+        }
+
 
         private void ShowResult(int result)
         {
