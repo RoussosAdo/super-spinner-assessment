@@ -21,11 +21,19 @@ namespace SuperSpinner.Core
 
         [Header("Tuning")]
         [SerializeField] private int loops = 6;
-        [SerializeField] private float spinDuration = 2.8f;
         [SerializeField] private float settleDuration = 0.25f;
         [SerializeField] private float zoomInScale = 1.15f;
         [SerializeField] private float zoomInDuration = 0.35f;
         [SerializeField] private float zoomOutDuration = 0.30f;
+
+        [Header("Slow Motion")]
+        [SerializeField, Range(0f, 0.4f)] private float slowMotionPortion = 0.2f;
+        [SerializeField] private float slowMotionDuration = 1.2f;
+        [SerializeField] private float fastSpinDuration = 2.0f;
+
+        [Header("Extra Anim")]
+        [SerializeField] private RectTransform outerRing;
+        [SerializeField] private float outerRingRpm = 180f;
 
         [Header("Result Anim")]
         [SerializeField] private float resultFadeIn = 0.20f;
@@ -37,11 +45,8 @@ namespace SuperSpinner.Core
         [SerializeField] private float endShakeDuration = 0.18f;
         [SerializeField] private float endShakeStrength = 10f;
         [SerializeField] private SuperSpinner.Audio.SpinnerAudio audioFx;
-        private int lastCenterIndex = -1;
         [SerializeField] private CanvasGroup leftPointer;
         [SerializeField] private CanvasGroup rightPointer;
-
-
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
@@ -49,12 +54,18 @@ namespace SuperSpinner.Core
         private float travel;
         private State state = State.Idle;
 
+        private int lastCenterIndex = -1;
+
+        // FIX: keep refs to kill running tweens/sequences
+        private Sequence activeSpinSeq;
+        private Tween tapTween;
+        private Tween ringTween;
 
         private void Awake()
         {
             api = new SpinnerApiService();
-            SetTapVisible(true);
             HideResultInstant();
+            SetTapVisible(true);
             state = State.Idle;
         }
 
@@ -62,32 +73,6 @@ namespace SuperSpinner.Core
         {
             state = State.Idle;
             SetTapVisible(true);
-        }
-
-        public void OnTap()
-        {
-            // Το tap απλά κλείνει το αποτέλεσμα και ξαναμπαίνει idle
-            if (state == State.ShowingResult)
-            {
-                HideResultInstant();
-                EnableTap();
-                return;
-            }
-
-            lastCenterIndex = view != null ? view.GetCenterIndex() : -1;
-
-            if (state == State.Spinning) return;
-
-            // Idle
-            state = State.Spinning;
-            audioFx?.PlaySpinLoop();
-            SetTapVisible(false);
-            HideResultInstant();
-
-            spinnerRoot.DOKill();
-            spinnerRoot.DOScale(zoomInScale, zoomInDuration)
-                .SetEase(Ease.OutBack)
-                .OnComplete(StartSpin);
         }
 
         public void ResetTravelToCurrent()
@@ -101,9 +86,45 @@ namespace SuperSpinner.Core
             travel = SpinnerView.Mod(currentY, loopH);
         }
 
+        public void OnTap()
+        {
+            // If showing result -> just close result and go idle
+            if (state == State.ShowingResult)
+            {
+                HideResultInstant();
+                EnableTap();
+                return;
+            }
+
+            // Block double tap
+            if (state == State.Spinning) return;
+
+            if (view != null) lastCenterIndex = view.GetCenterIndex();
+
+            // Enter spinning state immediately (hard lock)
+            state = State.Spinning;
+
+            // Kill anything that could re-trigger
+            tapTween?.Kill();
+            activeSpinSeq?.Kill();
+            ringTween?.Kill();
+
+            audioFx?.PlaySpinLoop();
+            SetTapVisible(false);
+            HideResultInstant();
+
+            spinnerRoot.DOKill();
+
+            // Keep reference so we can kill if needed
+            tapTween = spinnerRoot.DOScale(zoomInScale, zoomInDuration)
+                .SetEase(Ease.OutBack)
+                .OnComplete(StartSpin);
+        }
+
         private void StartSpin()
         {
             api.Spin()
+                .Take(1) // FIX: guarantee single result even if observable emits twice
                 .ObserveOnMainThread()
                 .Subscribe(
                     res =>
@@ -114,6 +135,7 @@ namespace SuperSpinner.Core
                     err =>
                     {
                         Debug.LogError(err);
+                        audioFx?.StopSpinLoop();
                         state = State.Idle;
                         SetTapVisible(true);
                     }
@@ -121,11 +143,26 @@ namespace SuperSpinner.Core
                 .AddTo(cd);
         }
 
+        private Tween StartOuterRingSpin(float duration)
+        {
+            if (outerRing == null) return null;
+
+            outerRing.DOKill();
+
+            // clockwise for UI is usually negative Z
+            float degrees = -outerRingRpm * duration;
+
+            return outerRing
+                .DORotate(new Vector3(0f, 0f, degrees), duration, RotateMode.FastBeyond360)
+                .SetEase(Ease.Linear);
+        }
+
         private void PlaySpinAnimation(int result)
         {
             if (view == null)
             {
                 Debug.LogError("SpinnerFlow: view is NULL.");
+                audioFx?.StopSpinLoop();
                 state = State.Idle;
                 SetTapVisible(true);
                 return;
@@ -135,10 +172,17 @@ namespace SuperSpinner.Core
             if (loopH <= 0.01f)
             {
                 Debug.LogError("SpinnerFlow: LoopHeight invalid.");
+                audioFx?.StopSpinLoop();
                 state = State.Idle;
                 SetTapVisible(true);
                 return;
             }
+
+            // FIX: kill any previous running sequences/tweens
+            activeSpinSeq?.Kill();
+            ringTween?.Kill();
+            view.ReelContent.DOKill();
+            spinnerRoot.DOKill();
 
             float targetMod = view.GetTargetModYForValue(result);
             float currentMod = SpinnerView.Mod(travel, loopH);
@@ -148,11 +192,19 @@ namespace SuperSpinner.Core
 
             float endTravel = travel + (loops * loopH) + deltaToTarget;
 
-            view.ReelContent.DOKill();
+            // total time for ring spin: fast + slow + tiny settle bounce
+            float totalSpinTime = fastSpinDuration + slowMotionDuration + 0.12f;
+            ringTween = StartOuterRingSpin(totalSpinTime);
+
+            // --- Slow motion split ---
+            float totalDelta = endTravel - travel;
+            float slowDelta = totalDelta * slowMotionPortion;
+            float fastEndTravel = endTravel - slowDelta;
 
             Sequence s = DOTween.Sequence();
+            activeSpinSeq = s;
 
-            // SPIN
+            // 1) FAST spin
             s.Append(DOTween.To(
                 () => travel,
                 x =>
@@ -163,11 +215,11 @@ namespace SuperSpinner.Core
                     view.UpdateHighlight();
                     TickIfCenterChanged();
                 },
-                endTravel,
-                spinDuration
+                fastEndTravel,
+                fastSpinDuration
             ).SetEase(Ease.InOutCubic));
 
-            // SETTLE (micro)
+            // 2) SLOW-MO
             s.Append(DOTween.To(
                 () => travel,
                 x =>
@@ -179,10 +231,28 @@ namespace SuperSpinner.Core
                     TickIfCenterChanged();
                 },
                 endTravel,
-                settleDuration
-            ).SetEase(Ease.OutQuad));
+                slowMotionDuration
+            ).SetEase(Ease.OutQuart));
 
-            // END FX
+            // Stop outer ring before stop FX
+            s.AppendCallback(() =>
+            {
+                ringTween?.Kill();
+                ringTween = null;
+            });
+
+            // 3) VISUAL micro settle (bounce only, no new travel)
+            s.AppendCallback(() =>
+            {
+                view.ReelContent.DOKill();
+                float baseY = view.ReelContent.anchoredPosition.y;
+
+                view.ReelContent.DOAnchorPosY(baseY + 6f, 0.06f)
+                    .SetEase(Ease.OutQuad)
+                    .SetLoops(2, LoopType.Yoyo);
+            });
+
+            // END FX + result
             s.AppendCallback(() =>
             {
                 FlashPointer(leftPointer);
@@ -190,6 +260,7 @@ namespace SuperSpinner.Core
 
                 spinnerRoot.DOKill();
                 spinnerRoot.DOShakeAnchorPos(endShakeDuration, endShakeStrength, 12, 90, false, true);
+
                 audioFx?.StopSpinLoop();
                 audioFx?.PlayStop();
                 audioFx?.PlayWin();
@@ -197,13 +268,21 @@ namespace SuperSpinner.Core
                 ShowResult(result);
             });
 
-            
-
             // ZOOM OUT
             s.Append(spinnerRoot.DOScale(1f, zoomOutDuration).SetEase(Ease.OutQuad));
 
-            // State -> ShowingResult 
-            s.AppendCallback(() => state = State.ShowingResult);
+            // Done -> showing result
+            s.AppendCallback(() =>
+            {
+                state = State.ShowingResult;
+                activeSpinSeq = null;
+            });
+
+            // Safety: if sequence is killed, clean refs
+            s.OnKill(() =>
+            {
+                if (activeSpinSeq == s) activeSpinSeq = null;
+            });
         }
 
         private void TickIfCenterChanged()
@@ -216,8 +295,7 @@ namespace SuperSpinner.Core
                 lastCenterIndex = idx;
                 audioFx.PlayTick();
             }
-        }       
-
+        }
 
         private void FlashPointer(CanvasGroup cg)
         {
@@ -226,7 +304,6 @@ namespace SuperSpinner.Core
             cg.alpha = 1f;
             cg.DOFade(0.2f, 0.06f).SetLoops(6, LoopType.Yoyo);
         }
-
 
         private void ShowResult(int result)
         {
@@ -276,6 +353,9 @@ namespace SuperSpinner.Core
 
         private void OnDestroy()
         {
+            activeSpinSeq?.Kill();
+            tapTween?.Kill();
+            ringTween?.Kill();
             cd.Dispose();
         }
     }

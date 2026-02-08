@@ -61,7 +61,7 @@ namespace SuperSpinner.UI
             if (UniqueCount <= 0) return 0;
 
             float y = reelContent.anchoredPosition.y;
-            int centerIndex = Mathf.RoundToInt(y / itemSpacing) % UniqueCount;
+            int centerIndex = Mathf.FloorToInt((y / itemSpacing) + 0.5f) % UniqueCount;
             if (centerIndex < 0) centerIndex += UniqueCount;
             return centerIndex;
         }
@@ -99,7 +99,7 @@ namespace SuperSpinner.UI
 
             // Με βάση το current reelContent y βρίσκουμε ποιο index είναι στο κέντρο
             float y = reelContent.anchoredPosition.y;
-            int centerIndex = Mathf.RoundToInt(y / itemSpacing) % UniqueCount;
+            int centerIndex = Mathf.FloorToInt((y / itemSpacing) + 0.5f) % UniqueCount;
             if (centerIndex < 0) centerIndex += UniqueCount;
 
             //  3 copies, το κέντρο θα βρίσκεται σε κάποια από τα 3 zones.

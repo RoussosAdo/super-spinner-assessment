@@ -1819,12 +1819,16 @@ MonoBehaviour:
   spinnerRoot: {fileID: 2142968421}
   tapOverlay: {fileID: 1217446568}
   resultText: {fileID: 115474901}
-  loops: 6
-  spinDuration: 2.8
+  loops: 8
   settleDuration: 0.25
   zoomInScale: 1.15
   zoomInDuration: 0.35
   zoomOutDuration: 0.3
+  slowMotionPortion: 0
+  slowMotionDuration: 0.5
+  fastSpinDuration: 2.5
+  outerRing: {fileID: 139125355}
+  outerRingRpm: 220
   resultFadeIn: 0.25
   resultPulseUp: 1.1
   resultPulseIn: 0.18
