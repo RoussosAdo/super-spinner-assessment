@@ -56,6 +56,17 @@ namespace SuperSpinner.UI
             UpdateHighlight(); 
         }
 
+        public int GetCenterIndex()
+        {
+            if (UniqueCount <= 0) return 0;
+
+            float y = reelContent.anchoredPosition.y;
+            int centerIndex = Mathf.RoundToInt(y / itemSpacing) % UniqueCount;
+            if (centerIndex < 0) centerIndex += UniqueCount;
+            return centerIndex;
+        }
+
+
         public void SetIdlePosition()
         {
             if (UniqueCount <= 0) return;

@@ -1800,6 +1800,9 @@ MonoBehaviour:
   prizePrefab: {fileID: 7985107302265612708, guid: a42995071241c264e91d64837ede9fe8, type: 3}
   itemSpacing: 120
   idleStartIndex: 1
+  sideAlpha: 0.45
+  centerScale: 1.12
+  sideScale: 0.95
 --- !u!114 &2142968423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1944,8 +1947,10 @@ MonoBehaviour:
   spinLoop: {fileID: 8300000, guid: fb2c582fe8647d64f8759bdc50867ec8, type: 3}
   spinStop: {fileID: 0}
   win: {fileID: 8300000, guid: b76e793963657a3449b29a1a0e6e45e4, type: 3}
+  tick: {fileID: 8300000, guid: f8eda72cf2b444a4dbe614b1d082f0fe, type: 3}
   loopVol: 0.6
   sfxVol: 0.9
+  tickVol: 0.6
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

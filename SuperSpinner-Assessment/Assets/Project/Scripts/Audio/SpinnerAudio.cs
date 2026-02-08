@@ -11,10 +11,14 @@ namespace SuperSpinner.Audio
         [SerializeField] private AudioClip spinLoop;
         [SerializeField] private AudioClip spinStop;
         [SerializeField] private AudioClip win;
+        [SerializeField] private AudioClip tick;
+
 
         [Header("Volumes")]
         [Range(0f, 1f)][SerializeField] private float loopVol = 0.6f;
-        [Range(0f, 1f)][SerializeField] private float sfxVol = 0.9f;
+        [Range(0f, 1f)][SerializeField] private float sfxVol = 0.6f;
+        [Range(0f, 1f)][SerializeField] private float tickVol = 1f;
+
 
         private void Reset()
         {
@@ -42,6 +46,13 @@ namespace SuperSpinner.Audio
                 source.Stop();
             }
         }
+
+        public void PlayTick()
+        {
+            if (source == null || tick == null) return;
+            source.PlayOneShot(tick, tickVol);
+        }
+
 
         public void PlayStop()
         {

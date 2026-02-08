@@ -37,6 +37,7 @@ namespace SuperSpinner.Core
         [SerializeField] private float endShakeDuration = 0.18f;
         [SerializeField] private float endShakeStrength = 10f;
         [SerializeField] private SuperSpinner.Audio.SpinnerAudio audioFx;
+        private int lastCenterIndex = -1;
         [SerializeField] private CanvasGroup leftPointer;
         [SerializeField] private CanvasGroup rightPointer;
 
@@ -47,6 +48,7 @@ namespace SuperSpinner.Core
 
         private float travel;
         private State state = State.Idle;
+
 
         private void Awake()
         {
@@ -71,6 +73,8 @@ namespace SuperSpinner.Core
                 EnableTap();
                 return;
             }
+
+            lastCenterIndex = view != null ? view.GetCenterIndex() : -1;
 
             if (state == State.Spinning) return;
 
@@ -157,6 +161,7 @@ namespace SuperSpinner.Core
                     float y = SpinnerView.Mod(travel, loopH);
                     view.ReelContent.anchoredPosition = new Vector2(0f, y);
                     view.UpdateHighlight();
+                    TickIfCenterChanged();
                 },
                 endTravel,
                 spinDuration
@@ -171,6 +176,7 @@ namespace SuperSpinner.Core
                     float y = SpinnerView.Mod(travel, loopH);
                     view.ReelContent.anchoredPosition = new Vector2(0f, y);
                     view.UpdateHighlight();
+                    TickIfCenterChanged();
                 },
                 endTravel,
                 settleDuration
@@ -199,6 +205,19 @@ namespace SuperSpinner.Core
             // State -> ShowingResult 
             s.AppendCallback(() => state = State.ShowingResult);
         }
+
+        private void TickIfCenterChanged()
+        {
+            if (view == null || audioFx == null) return;
+
+            int idx = view.GetCenterIndex();
+            if (idx != lastCenterIndex)
+            {
+                lastCenterIndex = idx;
+                audioFx.PlayTick();
+            }
+        }       
+
 
         private void FlashPointer(CanvasGroup cg)
         {
