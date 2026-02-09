@@ -48,9 +48,10 @@ namespace SuperSpinner.Core
         [SerializeField] private CanvasGroup leftPointer;
         [SerializeField] private CanvasGroup rightPointer;
 
+        [Header("Error UI")]
         [SerializeField] private SuperSpinner.UI.SpinnerErrorUi errorUi;
         [SerializeField] private float spinTimeoutSeconds = 6f;
-        [SerializeField] private int spinRetries = 0; 
+        [SerializeField] private int spinRetries = 0;
 
         [Header("Glow FX")]
         [SerializeField] private CanvasGroup resultGlow;
@@ -59,6 +60,7 @@ namespace SuperSpinner.Core
         [SerializeField] private float glowHold = 0.35f;
         [SerializeField] private float glowScaleUp = 1.08f;
 
+        [Header("Particles")]
         [SerializeField] private ParticleSystem coinRingBurst;
 
         [Header("Win Flash")]
@@ -67,8 +69,25 @@ namespace SuperSpinner.Core
         [SerializeField] private float flashOut = 0.22f;
         [SerializeField] private float hitFreeze = 0.04f;
 
+        // -------------------------
+        // IDLE AMBIENCE (NEW)
+        // -------------------------
+        [Header("Idle Ambience")]
+        [SerializeField] private CanvasGroup idleGlow;        // optional: CanvasGroup σε ένα idle glow image
+        [SerializeField] private CanvasGroup tapToSpinGroup;  // optional: CanvasGroup στο "TAP TO SPIN"
+        [SerializeField] private float idleRingRpm = 25f;     // αργό rotate στο idle
+        [SerializeField] private float idleBreathScale = 1.02f;
+        [SerializeField] private float idleBreathDuration = 1.4f;
+        [SerializeField] private float idleGlowMin = 0.03f;
+        [SerializeField] private float idleGlowMax = 0.10f;
+        [SerializeField] private float idleGlowPulseDuration = 1.2f;
+        [SerializeField] private float idleTapPulseMin = 0.55f;
+        [SerializeField] private float idleTapPulseMax = 1.00f;
+        [SerializeField] private float idleTapPulseDuration = 0.9f;
 
-
+        [Header("Idle Particles")]
+        [SerializeField] private ParticleSystem idleSparkles;
+        [SerializeField] private ParticleSystem idleTwinkles;
 
 
         private SpinnerApiService api;
@@ -76,13 +95,18 @@ namespace SuperSpinner.Core
 
         private float travel;
         private State state = State.Idle;
-
         private int lastCenterIndex = -1;
 
-        // FIX: keep refs to kill running tweens/sequences
+        // running refs
         private Sequence activeSpinSeq;
         private Tween tapTween;
         private Tween ringTween;
+
+        // idle refs
+        private Tween idleRingTween;
+        private Tween idleBreathTween;
+        private Tween idleGlowTween;
+        private Tween idleTapTween;
 
         private void Awake()
         {
@@ -97,12 +121,26 @@ namespace SuperSpinner.Core
                 resultGlow.gameObject.SetActive(false);
             }
 
+            if (winFlash != null)
+            {
+                winFlash.alpha = 0f;
+                winFlash.gameObject.SetActive(false);
+            }
+
+            if (idleGlow != null)
+            {
+                idleGlow.alpha = 0f;
+                idleGlow.gameObject.SetActive(false);
+            }
+
+            StartIdleAmbience();
         }
 
         public void EnableTap()
         {
             state = State.Idle;
             SetTapVisible(true);
+            StartIdleAmbience();
         }
 
         public void ResetTravelToCurrent()
@@ -120,7 +158,7 @@ namespace SuperSpinner.Core
         {
             errorUi?.HideInstant();
 
-            // If showing result -> just close result and go idle
+            // If showing result -> close result and go idle
             if (state == State.ShowingResult)
             {
                 HideResultInstant();
@@ -136,6 +174,8 @@ namespace SuperSpinner.Core
             // Enter spinning state immediately (hard lock)
             state = State.Spinning;
 
+            StopIdleAmbience();
+
             // Kill anything that could re-trigger
             tapTween?.Kill();
             activeSpinSeq?.Kill();
@@ -147,7 +187,6 @@ namespace SuperSpinner.Core
 
             spinnerRoot.DOKill();
 
-            // Keep reference so we can kill if needed
             tapTween = spinnerRoot.DOScale(zoomInScale, zoomInDuration)
                 .SetEase(Ease.OutBack)
                 .OnComplete(StartSpin);
@@ -161,26 +200,25 @@ namespace SuperSpinner.Core
                 .Retry(spinRetries)
                 .ObserveOnMainThread()
                 .Subscribe(
-                res =>
-                {
-                    Debug.Log("SPIN RESULT: " + res.spinnerValue);
-                    PlaySpinAnimation(res.spinnerValue);
-                },
-                err =>
-                {
-                    Debug.LogError(err);
+                    res =>
+                    {
+                        Debug.Log("SPIN RESULT: " + res.spinnerValue);
+                        PlaySpinAnimation(res.spinnerValue);
+                    },
+                    err =>
+                    {
+                        Debug.LogError(err);
 
-                    audioFx?.StopSpinLoop();
-                    errorUi?.Show("Spin failed. Tap to try again.");
+                        audioFx?.StopSpinLoop();
+                        errorUi?.Show("Spin failed. Tap to try again.");
 
-                    // βγάζουμε τον χρήστη σε idle
-                    state = State.Idle;
-                    SetTapVisible(true);
-                }
-            )
-            .AddTo(cd);
+                        state = State.Idle;
+                        SetTapVisible(true);
+                        StartIdleAmbience();
+                    }
+                )
+                .AddTo(cd);
         }
-
 
         private Tween StartOuterRingSpin(float duration)
         {
@@ -204,6 +242,7 @@ namespace SuperSpinner.Core
                 audioFx?.StopSpinLoop();
                 state = State.Idle;
                 SetTapVisible(true);
+                StartIdleAmbience();
                 return;
             }
 
@@ -214,10 +253,11 @@ namespace SuperSpinner.Core
                 audioFx?.StopSpinLoop();
                 state = State.Idle;
                 SetTapVisible(true);
+                StartIdleAmbience();
                 return;
             }
 
-            // FIX: kill any previous running sequences/tweens
+            // kill previous
             activeSpinSeq?.Kill();
             ringTween?.Kill();
             view.ReelContent.DOKill();
@@ -231,11 +271,9 @@ namespace SuperSpinner.Core
 
             float endTravel = travel + (loops * loopH) + deltaToTarget;
 
-            // total time for ring spin: fast + slow + tiny settle bounce
             float totalSpinTime = fastSpinDuration + slowMotionDuration + 0.12f;
             ringTween = StartOuterRingSpin(totalSpinTime);
 
-            // --- Slow motion split ---
             float totalDelta = endTravel - travel;
             float slowDelta = totalDelta * slowMotionPortion;
             float fastEndTravel = endTravel - slowDelta;
@@ -280,7 +318,7 @@ namespace SuperSpinner.Core
                 ringTween = null;
             });
 
-            // 3) VISUAL micro settle (bounce only, no new travel)
+            // 3) VISUAL micro settle
             s.AppendCallback(() =>
             {
                 view.ReelContent.DOKill();
@@ -318,7 +356,6 @@ namespace SuperSpinner.Core
                 activeSpinSeq = null;
             });
 
-            // Safety: if sequence is killed, clean refs
             s.OnKill(() =>
             {
                 if (activeSpinSeq == s) activeSpinSeq = null;
@@ -363,12 +400,10 @@ namespace SuperSpinner.Core
             resultText.gameObject.SetActive(true);
             resultText.text = result.ToString("N0");
 
-            // Fade in
             var c = resultText.color;
             c.a = 0f;
             resultText.color = c;
 
-            // Pulse
             var rt = resultText.rectTransform;
             rt.localScale = Vector3.one * 0.92f;
 
@@ -379,48 +414,49 @@ namespace SuperSpinner.Core
         }
 
         private void PlayWinFlash()
-{
-    if (winFlash == null) return;
+        {
+            if (winFlash == null) return;
 
-    winFlash.DOKill();
-    winFlash.alpha = 0f;
-    winFlash.gameObject.SetActive(true);
+            winFlash.DOKill();
+            winFlash.alpha = 0f;
+            winFlash.gameObject.SetActive(true);
 
-    Sequence f = DOTween.Sequence();
+            Sequence f = DOTween.Sequence();
 
-    // impact frame freeze
-    f.AppendCallback(() => Time.timeScale = 0f);
-    f.AppendInterval(hitFreeze);
-    f.AppendCallback(() => Time.timeScale = 1f);
+            // IMPORTANT: intervals must ignore timescale if you freeze time
+            f.SetUpdate(true);
 
-    // flash
-    f.Append(winFlash.DOFade(1f, flashIn));
-    f.Append(winFlash.DOFade(0f, flashOut));
+            // impact frame freeze
+            f.AppendCallback(() => Time.timeScale = 0f);
+            f.AppendInterval(hitFreeze);
+            f.AppendCallback(() => Time.timeScale = 1f);
 
-    f.OnComplete(() => winFlash.gameObject.SetActive(false));
-}
+            // flash
+            f.Append(winFlash.DOFade(1f, flashIn).SetUpdate(true));
+            f.Append(winFlash.DOFade(0f, flashOut).SetUpdate(true));
 
+            f.OnComplete(() => winFlash.gameObject.SetActive(false));
+        }
 
         private void PlayGlow()
-{
-    if (resultGlow == null) return;
+        {
+            if (resultGlow == null) return;
 
-    resultGlow.DOKill();
-    resultGlow.transform.DOKill();
+            resultGlow.DOKill();
+            resultGlow.transform.DOKill();
 
-    resultGlow.gameObject.SetActive(true);
-    resultGlow.alpha = 0f;
-    resultGlow.transform.localScale = Vector3.one * 0.9f;
+            resultGlow.gameObject.SetActive(true);
+            resultGlow.alpha = 0f;
+            resultGlow.transform.localScale = Vector3.one * 0.9f;
 
-    Sequence g = DOTween.Sequence();
-    g.Append(resultGlow.DOFade(1f, glowFadeIn).SetEase(Ease.OutQuad));
-    g.Join(resultGlow.transform.DOScale(glowScaleUp, glowFadeIn).SetEase(Ease.OutQuad));
-    g.AppendInterval(glowHold);
-    g.Append(resultGlow.DOFade(0f, glowFadeOut).SetEase(Ease.OutQuad));
-    g.Join(resultGlow.transform.DOScale(1.0f, glowFadeOut).SetEase(Ease.OutQuad));
-    g.OnComplete(() => resultGlow.gameObject.SetActive(false));
-}
-
+            Sequence g = DOTween.Sequence();
+            g.Append(resultGlow.DOFade(1f, glowFadeIn).SetEase(Ease.OutQuad));
+            g.Join(resultGlow.transform.DOScale(glowScaleUp, glowFadeIn).SetEase(Ease.OutQuad));
+            g.AppendInterval(glowHold);
+            g.Append(resultGlow.DOFade(0f, glowFadeOut).SetEase(Ease.OutQuad));
+            g.Join(resultGlow.transform.DOScale(1.0f, glowFadeOut).SetEase(Ease.OutQuad));
+            g.OnComplete(() => resultGlow.gameObject.SetActive(false));
+        }
 
         private void HideResultInstant()
         {
@@ -443,11 +479,111 @@ namespace SuperSpinner.Core
                 tapOverlay.SetActive(visible);
         }
 
+        // -------------------------
+        // IDLE AMBIENCE
+        // -------------------------
+        private void StartIdleAmbience()
+        {
+            StopIdleAmbience();
+
+            // OuterRing slow rotate
+            if (outerRing != null)
+            {
+                float dur = 60f / Mathf.Max(1f, idleRingRpm);
+                idleRingTween = outerRing
+                    .DORotate(new Vector3(0f, 0f, -360f), dur, RotateMode.FastBeyond360)
+                    .SetEase(Ease.Linear)
+                    .SetLoops(-1, LoopType.Restart);
+            }
+
+            // Root breathing
+            if (spinnerRoot != null)
+            {
+                spinnerRoot.DOKill();
+                spinnerRoot.localScale = Vector3.one;
+
+                idleBreathTween = spinnerRoot
+                    .DOScale(idleBreathScale, idleBreathDuration)
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo);
+            }
+
+            // Idle glow pulse (optional)
+            if (idleGlow != null)
+            {
+                idleGlow.DOKill();
+                idleGlow.gameObject.SetActive(true);
+                idleGlow.alpha = idleGlowMin;
+
+                idleGlowTween = DOTween.To(
+                        () => idleGlow.alpha,
+                        a => idleGlow.alpha = a,
+                        idleGlowMax,
+                        idleGlowPulseDuration
+                    )
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo);
+            }
+
+            // Tap pulse (optional)
+            if (tapToSpinGroup != null)
+            {
+                tapToSpinGroup.DOKill();
+                tapToSpinGroup.alpha = idleTapPulseMax;
+
+                idleTapTween = DOTween.To(
+                        () => tapToSpinGroup.alpha,
+                        a => tapToSpinGroup.alpha = a,
+                        idleTapPulseMin,
+                        idleTapPulseDuration
+                    )
+                    .SetEase(Ease.InOutSine)
+                    .SetLoops(-1, LoopType.Yoyo);
+            }
+
+            idleSparkles?.Play();
+            idleTwinkles?.Play();
+        }
+
+        private void StopIdleAmbience()
+        {
+
+            idleSparkles?.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+            idleTwinkles?.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+
+            idleRingTween?.Kill();
+            idleRingTween = null;
+
+            idleBreathTween?.Kill();
+            idleBreathTween = null;
+
+            idleGlowTween?.Kill();
+            idleGlowTween = null;
+
+            idleTapTween?.Kill();
+            idleTapTween = null;
+
+            if (spinnerRoot != null) spinnerRoot.localScale = Vector3.one;
+
+            if (idleGlow != null)
+            {
+                idleGlow.alpha = 0f;
+                idleGlow.gameObject.SetActive(false);
+            }
+
+            if (tapToSpinGroup != null)
+            {
+                tapToSpinGroup.alpha = 1f;
+            }
+        }
+
         private void OnDestroy()
         {
             activeSpinSeq?.Kill();
             tapTween?.Kill();
             ringTween?.Kill();
+
+            StopIdleAmbience();
             cd.Dispose();
         }
     }
