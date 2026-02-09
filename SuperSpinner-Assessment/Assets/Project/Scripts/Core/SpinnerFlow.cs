@@ -48,6 +48,11 @@ namespace SuperSpinner.Core
         [SerializeField] private CanvasGroup leftPointer;
         [SerializeField] private CanvasGroup rightPointer;
 
+        [SerializeField] private SuperSpinner.UI.SpinnerErrorUi errorUi;
+        [SerializeField] private float spinTimeoutSeconds = 6f;
+        [SerializeField] private int spinRetries = 0; 
+
+
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
 
@@ -88,6 +93,8 @@ namespace SuperSpinner.Core
 
         public void OnTap()
         {
+            errorUi?.HideInstant();
+
             // If showing result -> just close result and go idle
             if (state == State.ShowingResult)
             {
@@ -124,24 +131,31 @@ namespace SuperSpinner.Core
         private void StartSpin()
         {
             api.Spin()
-                .Take(1) // FIX: guarantee single result even if observable emits twice
+                .Take(1)
+                .Timeout(System.TimeSpan.FromSeconds(spinTimeoutSeconds))
+                .Retry(spinRetries)
                 .ObserveOnMainThread()
                 .Subscribe(
-                    res =>
-                    {
-                        Debug.Log("SPIN RESULT: " + res.spinnerValue);
-                        PlaySpinAnimation(res.spinnerValue);
-                    },
-                    err =>
-                    {
-                        Debug.LogError(err);
-                        audioFx?.StopSpinLoop();
-                        state = State.Idle;
-                        SetTapVisible(true);
-                    }
-                )
-                .AddTo(cd);
+                res =>
+                {
+                    Debug.Log("SPIN RESULT: " + res.spinnerValue);
+                    PlaySpinAnimation(res.spinnerValue);
+                },
+                err =>
+                {
+                    Debug.LogError(err);
+
+                    audioFx?.StopSpinLoop();
+                    errorUi?.Show("Spin failed. Tap to try again.");
+
+                    // βγάζουμε τον χρήστη σε idle
+                    state = State.Idle;
+                    SetTapVisible(true);
+                }
+            )
+            .AddTo(cd);
         }
+
 
         private Tween StartOuterRingSpin(float duration)
         {

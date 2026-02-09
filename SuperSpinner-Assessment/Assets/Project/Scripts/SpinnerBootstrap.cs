@@ -1,3 +1,4 @@
+using System;
 using UniRx;
 using UnityEngine;
 using SuperSpinner.Networking;
@@ -10,6 +11,11 @@ namespace SuperSpinner.Core
         [SerializeField] private SpinnerUiRefs ui;
         [SerializeField] private SpinnerView view;
         [SerializeField] private SpinnerFlow flow;
+        [SerializeField] private SpinnerErrorUi errorUi;
+
+        [Header("Networking")]
+        [SerializeField] private float valuesTimeoutSeconds = 8f;
+        [SerializeField] private int valuesRetries = 1;
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new CompositeDisposable();
@@ -18,37 +24,52 @@ namespace SuperSpinner.Core
         {
             api = new SpinnerApiService();
 
-            if (ui == null) Debug.LogError("SpinnerBootstrap: ui is not assigned.");
-            if (view == null) Debug.LogError("SpinnerBootstrap: view is not assigned.");
-            if (flow == null) Debug.LogError("SpinnerBootstrap: flow is not assigned.");
-
             ui?.ShowSpinner(false);
             ui?.ShowLoading(true);
+
+            errorUi?.HideInstant();
         }
 
         private void Start()
         {
+            LoadValues();
+        }
+
+        private void LoadValues()
+        {
+            errorUi?.HideInstant();
+            ui?.ShowSpinner(false);
+            ui?.ShowLoading(true);
+
             api.GetValues()
+                .Timeout(TimeSpan.FromSeconds(valuesTimeoutSeconds))
+                .Retry(valuesRetries) // 1 retry
                 .ObserveOnMainThread()
                 .Subscribe(
                     res =>
                     {
-                        Debug.Log($"Spinner values received: {string.Join(", ", res.spinnerValues)}");
-
-                        // 1) Build reel
                         view.BuildReel(res.spinnerValues);
-
-                        // 2) Sync travel with idle position
                         flow.ResetTravelToCurrent();
 
-                        // 3) Show UI
                         ui?.ShowLoading(false);
                         ui?.ShowSpinner(true);
 
-                        // 4) Enable tap
-                        flow?.EnableTap();
+                        flow.EnableTap();
                     },
-                    err => Debug.LogError(err)
+                    err =>
+                    {
+                        ui?.ShowLoading(false);
+
+                        // error
+                        errorUi?.Show("Network error. Please try again.");
+
+                        // Εδώ επιλέγεις:
+                        // A) auto retry σε 1.5s
+                        Observable.Timer(TimeSpan.FromSeconds(1.5f))
+                            .ObserveOnMainThread()
+                            .Subscribe(_ => LoadValues())
+                            .AddTo(cd);
+                    }
                 )
                 .AddTo(cd);
         }
