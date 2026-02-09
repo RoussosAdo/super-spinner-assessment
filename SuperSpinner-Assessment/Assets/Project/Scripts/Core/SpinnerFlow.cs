@@ -52,6 +52,14 @@ namespace SuperSpinner.Core
         [SerializeField] private float spinTimeoutSeconds = 6f;
         [SerializeField] private int spinRetries = 0; 
 
+        [Header("Glow FX")]
+        [SerializeField] private CanvasGroup resultGlow;
+        [SerializeField] private float glowFadeIn = 0.15f;
+        [SerializeField] private float glowFadeOut = 0.25f;
+        [SerializeField] private float glowHold = 0.35f;
+        [SerializeField] private float glowScaleUp = 1.08f;
+
+
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
@@ -72,6 +80,13 @@ namespace SuperSpinner.Core
             HideResultInstant();
             SetTapVisible(true);
             state = State.Idle;
+
+            if (resultGlow != null)
+            {
+                resultGlow.alpha = 0f;
+                resultGlow.gameObject.SetActive(false);
+            }
+
         }
 
         public void EnableTap()
@@ -321,6 +336,8 @@ namespace SuperSpinner.Core
 
         private void ShowResult(int result)
         {
+            PlayGlow();
+
             if (resultText == null) return;
 
             resultText.DOKill();
@@ -343,6 +360,27 @@ namespace SuperSpinner.Core
             r.Join(rt.DOScale(resultPulseUp, resultPulseIn).SetEase(Ease.OutBack));
             r.Append(rt.DOScale(1f, resultPulseOut).SetEase(Ease.OutQuad));
         }
+
+        private void PlayGlow()
+{
+    if (resultGlow == null) return;
+
+    resultGlow.DOKill();
+    resultGlow.transform.DOKill();
+
+    resultGlow.gameObject.SetActive(true);
+    resultGlow.alpha = 0f;
+    resultGlow.transform.localScale = Vector3.one * 0.9f;
+
+    Sequence g = DOTween.Sequence();
+    g.Append(resultGlow.DOFade(1f, glowFadeIn).SetEase(Ease.OutQuad));
+    g.Join(resultGlow.transform.DOScale(glowScaleUp, glowFadeIn).SetEase(Ease.OutQuad));
+    g.AppendInterval(glowHold);
+    g.Append(resultGlow.DOFade(0f, glowFadeOut).SetEase(Ease.OutQuad));
+    g.Join(resultGlow.transform.DOScale(1.0f, glowFadeOut).SetEase(Ease.OutQuad));
+    g.OnComplete(() => resultGlow.gameObject.SetActive(false));
+}
+
 
         private void HideResultInstant()
         {
