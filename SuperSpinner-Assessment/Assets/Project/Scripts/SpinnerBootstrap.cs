@@ -36,43 +36,48 @@ namespace SuperSpinner.Core
         }
 
         private void LoadValues()
-        {
-            errorUi?.HideInstant();
-            ui?.ShowSpinner(false);
-            ui?.ShowLoading(true);
+{
+    errorUi?.HideInstant();
 
-            api.GetValues()
-                .Timeout(TimeSpan.FromSeconds(valuesTimeoutSeconds))
-                .Retry(valuesRetries) // 1 retry
-                .ObserveOnMainThread()
-                .Subscribe(
-                    res =>
-                    {
-                        view.BuildReel(res.spinnerValues);
-                        flow.ResetTravelToCurrent();
+    // Force UI state κάθε φορά που ξεκινά request
+    ui?.ShowSpinner(false);
+    ui?.ShowLoading(true);
 
-                        ui?.ShowLoading(false);
-                        ui?.ShowSpinner(true);
+    api.GetValues()
+        .Timeout(TimeSpan.FromSeconds(valuesTimeoutSeconds))
+        .Retry(valuesRetries)
+        .ObserveOnMainThread()
+        .Subscribe(
+            res =>
+            {
+                // Build UI content
+                view.BuildReel(res.spinnerValues);
+                flow.ResetTravelToCurrent();
 
-                        flow.EnableTap();
-                    },
-                    err =>
-                    {
-                        ui?.ShowLoading(false);
+                // Force UI state 
+                errorUi?.HideInstant();
+                ui?.ShowLoading(false);
+                ui?.ShowSpinner(true);
 
-                        // error
-                        errorUi?.Show("Network error. Please try again.");
+                flow.EnableTap();
+            },
+            err =>
+            {
+                // Force UI state σε failure
+                ui?.ShowLoading(false);
+                ui?.ShowSpinner(false);
 
-                        // Εδώ επιλέγεις:
-                        // A) auto retry σε 1.5s
-                        Observable.Timer(TimeSpan.FromSeconds(1.5f))
-                            .ObserveOnMainThread()
-                            .Subscribe(_ => LoadValues())
-                            .AddTo(cd);
-                    }
-                )
-                .AddTo(cd);
-        }
+                errorUi?.Show("Network error. Retrying...");
+
+                Observable.Timer(TimeSpan.FromSeconds(1.5f))
+                    .ObserveOnMainThread()
+                    .Subscribe(_ => LoadValues())
+                    .AddTo(cd);
+            }
+        )
+        .AddTo(cd);
+}
+
 
         private void OnDestroy()
         {
