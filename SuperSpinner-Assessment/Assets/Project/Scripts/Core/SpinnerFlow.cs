@@ -59,6 +59,16 @@ namespace SuperSpinner.Core
         [SerializeField] private float glowHold = 0.35f;
         [SerializeField] private float glowScaleUp = 1.08f;
 
+        [SerializeField] private ParticleSystem coinRingBurst;
+
+        [Header("Win Flash")]
+        [SerializeField] private CanvasGroup winFlash;
+        [SerializeField] private float flashIn = 0.06f;
+        [SerializeField] private float flashOut = 0.22f;
+        [SerializeField] private float hitFreeze = 0.04f;
+
+
+
 
 
         private SpinnerApiService api;
@@ -294,6 +304,7 @@ namespace SuperSpinner.Core
                 audioFx?.PlayStop();
                 audioFx?.PlayWin();
 
+                PlayWinFlash();
                 ShowResult(result);
             });
 
@@ -336,6 +347,12 @@ namespace SuperSpinner.Core
 
         private void ShowResult(int result)
         {
+            if (coinRingBurst != null)
+            {
+                coinRingBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                coinRingBurst.Play();
+            }
+
             PlayGlow();
 
             if (resultText == null) return;
@@ -360,6 +377,29 @@ namespace SuperSpinner.Core
             r.Join(rt.DOScale(resultPulseUp, resultPulseIn).SetEase(Ease.OutBack));
             r.Append(rt.DOScale(1f, resultPulseOut).SetEase(Ease.OutQuad));
         }
+
+        private void PlayWinFlash()
+{
+    if (winFlash == null) return;
+
+    winFlash.DOKill();
+    winFlash.alpha = 0f;
+    winFlash.gameObject.SetActive(true);
+
+    Sequence f = DOTween.Sequence();
+
+    // impact frame freeze
+    f.AppendCallback(() => Time.timeScale = 0f);
+    f.AppendInterval(hitFreeze);
+    f.AppendCallback(() => Time.timeScale = 1f);
+
+    // flash
+    f.Append(winFlash.DOFade(1f, flashIn));
+    f.Append(winFlash.DOFade(0f, flashOut));
+
+    f.OnComplete(() => winFlash.gameObject.SetActive(false));
+}
+
 
         private void PlayGlow()
 {
