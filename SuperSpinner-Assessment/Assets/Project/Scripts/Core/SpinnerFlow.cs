@@ -41,6 +41,21 @@ namespace SuperSpinner.Core
         [SerializeField] private float resultPulseIn = 0.18f;
         [SerializeField] private float resultPulseOut = 0.12f;
 
+        [Header("Win Overlay")]
+        [SerializeField] private CanvasGroup winOverlay;   // το panel/overlay (WinOverlay) με CanvasGroup
+        [SerializeField] private GameObject winContent; 
+        [SerializeField] private TMP_Text winTitleText;     // "BIG WIN!"
+        [SerializeField] private TMP_Text winAmountText;    // το μεγάλο ποσό 
+        [SerializeField] private TMP_Text winPromptText;    // "TAP TO CONTINUE"
+
+
+
+        [Header("Win Tiers")]
+        [SerializeField] private int bigWinThreshold = 10000;
+        [SerializeField] private int megaWinThreshold = 100000;
+
+
+
         [Header("End Micro FX")]
         [SerializeField] private float endShakeDuration = 0.18f;
         [SerializeField] private float endShakeStrength = 10f;
@@ -89,6 +104,18 @@ namespace SuperSpinner.Core
         [SerializeField] private ParticleSystem idleSparkles;
         [SerializeField] private ParticleSystem idleTwinkles;
 
+        
+
+        
+
+        [Header("Count Up")]
+        [SerializeField] private float smallCountTime = 0.55f;
+        [SerializeField] private float bigCountTime = 1.1f;
+        [SerializeField] private float megaCountTime = 1.8f;
+        [SerializeField] private Ease countEase = Ease.OutCubic;
+
+
+
 
         private SpinnerApiService api;
         private readonly CompositeDisposable cd = new();
@@ -112,6 +139,7 @@ namespace SuperSpinner.Core
         {
             api = new SpinnerApiService();
             HideResultInstant();
+            HideWinScreenInstant();
             SetTapVisible(true);
             state = State.Idle;
 
@@ -160,11 +188,16 @@ namespace SuperSpinner.Core
 
             // If showing result -> close result and go idle
             if (state == State.ShowingResult)
-            {
-                HideResultInstant();
-                EnableTap();
-                return;
-            }
+{
+    HideWinScreenInstant();
+
+    if (coinRingBurst != null)
+        coinRingBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+    EnableTap();
+    return;
+}
+
 
             // Block double tap
             if (state == State.Spinning) return;
@@ -233,6 +266,8 @@ namespace SuperSpinner.Core
                 .DORotate(new Vector3(0f, 0f, degrees), duration, RotateMode.FastBeyond360)
                 .SetEase(Ease.Linear);
         }
+
+
 
         private void PlaySpinAnimation(int result)
         {
@@ -343,7 +378,7 @@ namespace SuperSpinner.Core
                 audioFx?.PlayWin();
 
                 PlayWinFlash();
-                ShowResult(result);
+                PlayWinPresentation(result);
             });
 
             // ZOOM OUT
@@ -361,6 +396,108 @@ namespace SuperSpinner.Core
                 if (activeSpinSeq == s) activeSpinSeq = null;
             });
         }
+
+        private Sequence winSeq;
+
+        private void ShowWinOverlay(bool show)
+{
+    if (winOverlay == null) return;
+
+    // IMPORTANT: το SetActive(true) στο parent είναι αυτό που ξε-γκριζάρει τα παιδιά
+    winOverlay.gameObject.SetActive(show);
+
+    if (winContent != null) winContent.SetActive(show);
+    if (winTitleText != null) winTitleText.gameObject.SetActive(show);
+    if (winAmountText != null) winAmountText.gameObject.SetActive(show);
+    if (winPromptText != null) winPromptText.gameObject.SetActive(show);
+
+    winOverlay.DOKill();
+    winOverlay.alpha = show ? 1f : 0f;
+}
+
+
+private void PlayWinPresentation(int result)
+{
+
+    ShowWinOverlay(true);
+    // kill παλιό win sequence
+    winSeq?.Kill();
+    winSeq = null;
+
+    // (προαιρετικό) σταμάτα resultText αν χρησιμοποιείς overlay
+    // HideResultInstant();
+
+    // Tier
+    WinTier tier = GetTier(result);
+
+    string title = tier switch
+    {
+        WinTier.Mega => "MEGA WIN!",
+        WinTier.Big  => "BIG WIN!",
+        _            => "YOU WIN!"
+    };
+
+    float t = tier switch
+    {
+        WinTier.Mega => megaCountTime,
+        WinTier.Big  => bigCountTime,
+        _            => smallCountTime
+    };
+
+    // Δείξε overlay
+    ShowWinScreenBase(title);
+
+    // Παίξε έξτρα FX ανά tier (λίγο/πολύ)
+    // Small: normal glow/coins
+    // Big: +1 burst + λίγο παραπάνω shake
+    // Mega: +2 bursts + πιο δυνατό glow
+    if (tier == WinTier.Big)
+    {
+        // π.χ. δεύτερο coin burst (αν έχεις)
+        // coinRingBurst?.Play();
+        spinnerRoot?.DOPunchScale(Vector3.one * 0.06f, 0.22f, 10, 1f);
+    }
+    else if (tier == WinTier.Mega)
+    {
+        spinnerRoot?.DOPunchScale(Vector3.one * 0.09f, 0.28f, 12, 1f);
+        // εδώ μπορείς να κάνεις και δεύτερο flash / extra particles
+    }
+
+    // Count-up + end punch
+    winSeq = DOTween.Sequence().SetUpdate(true);
+
+    winSeq.AppendCallback(() =>
+{
+    if (coinRingBurst != null)
+    {
+        coinRingBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        coinRingBurst.Play();
+    }
+
+    PlayGlow();
+});
+
+
+    winSeq.Append(CountUpTo(result, t));
+
+    winSeq.AppendCallback(() =>
+    {
+        // τελικό “clink”
+        if (winAmountText != null)
+        {
+            var rt = winAmountText.rectTransform;
+            rt.DOKill();
+            rt.localScale = Vector3.one * 0.95f;
+            DOTween.Sequence().SetUpdate(true)
+                .Append(rt.DOScale(1.12f, 0.18f).SetEase(Ease.OutBack))
+                .Append(rt.DOScale(1.0f, 0.12f).SetEase(Ease.OutQuad));
+        }
+
+        // εδώ αφήνεις τον χρήστη σε ShowingResult
+        state = State.ShowingResult;
+    });
+}
+
 
         private void TickIfCenterChanged()
         {
@@ -382,36 +519,96 @@ namespace SuperSpinner.Core
             cg.DOFade(0.2f, 0.06f).SetLoops(6, LoopType.Yoyo);
         }
 
-        private void ShowResult(int result)
+        private enum WinTier { Small, Big, Mega }
+
+        private WinTier GetTier(int value)
         {
-            if (coinRingBurst != null)
-            {
-                coinRingBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-                coinRingBurst.Play();
-            }
-
-            PlayGlow();
-
-            if (resultText == null) return;
-
-            resultText.DOKill();
-            resultText.rectTransform.DOKill();
-
-            resultText.gameObject.SetActive(true);
-            resultText.text = result.ToString("N0");
-
-            var c = resultText.color;
-            c.a = 0f;
-            resultText.color = c;
-
-            var rt = resultText.rectTransform;
-            rt.localScale = Vector3.one * 0.92f;
-
-            Sequence r = DOTween.Sequence();
-            r.Append(resultText.DOFade(1f, resultFadeIn).SetEase(Ease.OutQuad));
-            r.Join(rt.DOScale(resultPulseUp, resultPulseIn).SetEase(Ease.OutBack));
-            r.Append(rt.DOScale(1f, resultPulseOut).SetEase(Ease.OutQuad));
+            if (value >= megaWinThreshold) return WinTier.Mega;
+            if (value >= bigWinThreshold) return WinTier.Big;
+            return WinTier.Small;
         }
+
+    private void HideWinScreenInstant()
+    {
+    if (winOverlay != null)
+    {
+        winOverlay.DOKill();
+        winOverlay.alpha = 0f;
+        winOverlay.gameObject.SetActive(false);
+    }
+
+    if (winTitleText != null)
+    {
+        winTitleText.DOKill();
+        winTitleText.text = "";
+        winTitleText.gameObject.SetActive(false);
+    }
+
+    if (winAmountText != null)
+    {
+        winAmountText.DOKill();
+        winAmountText.text = "";
+        winAmountText.gameObject.SetActive(false);
+    }
+
+    if (winPromptText != null)
+    {
+        winPromptText.DOKill();
+        winPromptText.text = "";
+        winPromptText.gameObject.SetActive(false);
+    }
+}
+
+
+        private Tween CountUpTo(int target, float duration)
+{
+    if (winAmountText == null) return null;
+
+    int current = 0;
+    winAmountText.text = "0";
+
+    // Unscaled ώστε να μη σπάει από hit-freeze
+    return DOTween.To(() => current, x =>
+    {
+        current = x;
+        winAmountText.text = current.ToString("N0");
+    }, target, duration).SetEase(countEase).SetUpdate(true);
+}
+
+
+private void ShowWinScreenBase(string title)
+{
+    if (winOverlay != null)
+    {
+        winOverlay.DOKill();
+        winOverlay.gameObject.SetActive(true);
+        winOverlay.alpha = 0f;
+        winOverlay.DOFade(1f, 0.18f).SetEase(Ease.OutQuad);
+    }
+
+    if (winTitleText != null)
+    {
+        winTitleText.gameObject.SetActive(true);
+        winTitleText.text = title;
+
+        var c = winTitleText.color;
+        c.a = 1f;
+        winTitleText.color = c;
+    }
+
+    if (winPromptText != null)
+    {
+        winPromptText.gameObject.SetActive(true);
+        winPromptText.text = "TAP TO CONTINUE";
+
+        var c = winPromptText.color;
+        c.a = 0f;
+        winPromptText.color = c;
+
+        winPromptText.DOFade(1f, 0.18f).SetDelay(0.15f).SetEase(Ease.OutQuad);
+    }
+}
+
 
         private void PlayWinFlash()
         {
