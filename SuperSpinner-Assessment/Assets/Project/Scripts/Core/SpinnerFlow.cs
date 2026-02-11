@@ -61,7 +61,7 @@ namespace SuperSpinner.Core
         [SerializeField] private float endShakeStrength = 10f;
         [SerializeField] private SuperSpinner.Audio.SpinnerAudio audioFx;
         [SerializeField] private CanvasGroup leftPointer;
-        [SerializeField] private CanvasGroup rightPointer;
+        [SerializeField] private CanvasGroup rightPointer;  
 
         [Header("Error UI")]
         [SerializeField] private SuperSpinner.UI.SpinnerErrorUi errorUi;
@@ -114,6 +114,26 @@ namespace SuperSpinner.Core
         [SerializeField] private float megaCountTime = 1.8f;
         [SerializeField] private Ease countEase = Ease.OutCubic;
 
+        [Header("Pointer Spin Anim")]
+        [SerializeField] private RectTransform leftPointerRt;
+        [SerializeField] private RectTransform rightPointerRt;
+        [SerializeField] private float pointerDip = 10f;
+        [SerializeField] private float pointerDipDuration = 0.08f;
+        [SerializeField] private float pointerReturnDuration = 0.10f;
+        [SerializeField] private float pointerLoopGap = 0.10f;
+
+        private Tween leftPointerSpinTween;
+        private Tween rightPointerSpinTween;
+
+        private Vector2 leftPointerStartPos;
+        private Vector2 rightPointerStartPos;
+
+        [Header("Pointer Particles (Spin only)")]
+        [SerializeField] private ParticleSystem leftPointerParticles;
+        [SerializeField] private ParticleSystem rightPointerParticles;
+
+
+
 
 
 
@@ -134,6 +154,30 @@ namespace SuperSpinner.Core
         private Tween idleBreathTween;
         private Tween idleGlowTween;
         private Tween idleTapTween;
+
+        
+
+
+private bool pointerPosCached;
+
+private void Start()
+{
+    CachePointerStartPositions();
+}
+
+private void CachePointerStartPositions()
+{
+    if (pointerPosCached) return;
+
+    // force UI layout to settle
+    Canvas.ForceUpdateCanvases();
+
+    if (leftPointerRt != null) leftPointerStartPos = leftPointerRt.anchoredPosition;
+    if (rightPointerRt != null) rightPointerStartPos = rightPointerRt.anchoredPosition;
+
+    pointerPosCached = true;
+}
+
 
         private void Awake()
         {
@@ -188,15 +232,16 @@ namespace SuperSpinner.Core
 
             // If showing result -> close result and go idle
             if (state == State.ShowingResult)
-{
-    HideWinScreenInstant();
+            {
+                HideWinScreenInstant();
 
-    if (coinRingBurst != null)
-        coinRingBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                if (coinRingBurst != null)
+                    coinRingBurst.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
-    EnableTap();
-    return;
-}
+                EnableTap();
+                StopPointerParticles();
+                return;
+            }
 
 
             // Block double tap
@@ -206,8 +251,11 @@ namespace SuperSpinner.Core
 
             // Enter spinning state immediately (hard lock)
             state = State.Spinning;
-
             StopIdleAmbience();
+            StartPointerParticles();
+            StartPointerSpinAnim();
+
+            
 
             // Kill anything that could re-trigger
             tapTween?.Kill();
@@ -242,6 +290,8 @@ namespace SuperSpinner.Core
                     {
                         Debug.LogError(err);
 
+                        StopPointerParticles();
+                        StopPointerSpinAnim();
                         audioFx?.StopSpinLoop();
                         errorUi?.Show("Spin failed. Tap to try again.");
 
@@ -367,6 +417,9 @@ namespace SuperSpinner.Core
             // END FX + result
             s.AppendCallback(() =>
             {
+                StopPointerParticles();
+                StopPointerSpinAnim();
+
                 FlashPointer(leftPointer);
                 FlashPointer(rightPointer);
 
@@ -396,6 +449,75 @@ namespace SuperSpinner.Core
                 if (activeSpinSeq == s) activeSpinSeq = null;
             });
         }
+
+        private void StartPointerParticles()
+{
+    if (leftPointerParticles != null)
+    {
+        leftPointerParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        leftPointerParticles.Play(true);
+    }
+
+    if (rightPointerParticles != null)
+    {
+        rightPointerParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        rightPointerParticles.Play(true);
+    }
+}
+
+private void StopPointerParticles()
+{
+    if (leftPointerParticles != null)
+        leftPointerParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+    if (rightPointerParticles != null)
+        rightPointerParticles.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+}
+
+
+        private void StartPointerSpinAnim()
+{
+    CachePointerStartPositions();
+    StopPointerSpinAnim();
+
+    if (leftPointerRt != null)
+    {
+        leftPointerRt.anchoredPosition = leftPointerStartPos;
+
+        leftPointerSpinTween = DOTween.Sequence()
+            .Append(leftPointerRt.DOAnchorPosY(leftPointerStartPos.y - pointerDip, pointerDipDuration).SetEase(Ease.OutQuad))
+            .Append(leftPointerRt.DOAnchorPosY(leftPointerStartPos.y, pointerReturnDuration).SetEase(Ease.OutQuad))
+            .AppendInterval(pointerLoopGap)
+            .SetLoops(-1, LoopType.Restart);
+    }
+
+    if (rightPointerRt != null)
+    {
+        rightPointerRt.anchoredPosition = rightPointerStartPos;
+
+        // μικρό offset για να μην είναι 100% sync (πιο “alive”)
+        rightPointerSpinTween = DOTween.Sequence()
+            .AppendInterval(0.03f)
+            .Append(rightPointerRt.DOAnchorPosY(rightPointerStartPos.y - pointerDip, pointerDipDuration).SetEase(Ease.OutQuad))
+            .Append(rightPointerRt.DOAnchorPosY(rightPointerStartPos.y, pointerReturnDuration).SetEase(Ease.OutQuad))
+            .AppendInterval(pointerLoopGap)
+            .SetLoops(-1, LoopType.Restart);
+    }
+}
+
+private void StopPointerSpinAnim()
+{
+    leftPointerSpinTween?.Kill();
+    rightPointerSpinTween?.Kill();
+    leftPointerSpinTween = null;
+    rightPointerSpinTween = null;
+
+    if (!pointerPosCached) return;
+
+    if (leftPointerRt != null) leftPointerRt.anchoredPosition = leftPointerStartPos;
+    if (rightPointerRt != null) rightPointerRt.anchoredPosition = rightPointerStartPos;
+}
+
 
         private Sequence winSeq;
 
@@ -781,6 +903,7 @@ private void ShowWinScreenBase(string title)
             ringTween?.Kill();
 
             StopIdleAmbience();
+            StopPointerSpinAnim();
             cd.Dispose();
         }
     }
