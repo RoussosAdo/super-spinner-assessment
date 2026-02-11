@@ -75,4 +75,75 @@ The project follows clean code principles with UniRx for async flow, DOTween for
 ---
 
 ## 📁 Project Structure
+SuperSpinner
+├── Core
+│ ├── SpinnerBootstrap.cs
+│ └── SpinnerFlow.cs
+│
+├── UI
+│ ├── SpinnerView.cs
+│ ├── SpinnerUiRefs.cs
+│ └── SpinnerErrorUi.cs
+│
+├── Networking
+│ └── SpinnerApiService.cs
+│
+├── VFX
+│ ├── Shockwave Shader Graph
+│ ├── Pointer Particles
+│ └── Win Effects
+│
+└── Audio
+└── SpinnerAudio.cs
+
+
+---
+
+## 🎮 How It Works
+
+1. App loads spinner values from API  
+2. User taps **Tap to Spin**  
+3. Flow:
+   - Zoom in  
+   - Fast spin  
+   - Slow motion finish  
+   - Result lock  
+4. Win presentation:
+   - Count-up  
+   - Glow + flash  
+   - Particles  
+   - Tap to continue → next round
+
+---
+
+## ⚙ Setup
+
+1. Open in **Unity 6000.0.61f1**  
+2. Install packages:
+   - DOTween  
+   - UniRx  
+3. Open scene: `Scenes/Main.unity`  
+4. Press Play 🎉
+
+---
+
+## 📌 Highlights for Evaluation
+
+- Clean reactive architecture  
+- Professional feel & juice  
+- Extra shader/VFX beyond requirements  
+- Robust error handling  
+- Modular & scalable codebase
+
+---
+
+## 👤 Author
+
+**Antonis**  
+Unity Developer  
+Technical Assignment – AbZorba Games
+
+---
+
+> Built with passion for game feel & polish 💛
 
