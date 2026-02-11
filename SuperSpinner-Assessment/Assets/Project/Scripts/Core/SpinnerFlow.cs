@@ -132,7 +132,7 @@ namespace SuperSpinner.Core
         [SerializeField] private ParticleSystem leftPointerParticles;
         [SerializeField] private ParticleSystem rightPointerParticles;
 
-
+        [SerializeField] private SpinOnlyFx shockwaveFx;
 
 
 
@@ -214,6 +214,29 @@ private void CachePointerStartPositions()
             SetTapVisible(true);
             StartIdleAmbience();
         }
+
+        public void ForceRestartFlow()
+{
+    
+    HideWinScreenInstant();
+    HideResultInstant();
+
+    
+    activeSpinSeq?.Kill();
+    tapTween?.Kill();
+    ringTween?.Kill();
+    winSeq?.Kill();
+
+    // reset state
+    state = State.Idle;
+
+    //  tap to spin
+    SetTapVisible(true);
+
+    // idle ambience 
+    StartIdleAmbience();
+}
+
 
         public void ResetTravelToCurrent()
         {
@@ -522,7 +545,9 @@ private void StopPointerSpinAnim()
         private Sequence winSeq;
 
         private void ShowWinOverlay(bool show)
-{
+    {
+        shockwaveFx.StartFx();
+
     if (winOverlay == null) return;
 
     // IMPORTANT: το SetActive(true) στο parent είναι αυτό που ξε-γκριζάρει τα παιδιά
@@ -615,7 +640,7 @@ private void PlayWinPresentation(int result)
                 .Append(rt.DOScale(1.0f, 0.12f).SetEase(Ease.OutQuad));
         }
 
-        // εδώ αφήνεις τον χρήστη σε ShowingResult
+        //  ShowingResult
         state = State.ShowingResult;
     });
 }
@@ -652,6 +677,9 @@ private void PlayWinPresentation(int result)
 
     private void HideWinScreenInstant()
     {
+
+        shockwaveFx.StopFx();
+
     if (winOverlay != null)
     {
         winOverlay.DOKill();
