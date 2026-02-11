@@ -122,7 +122,7 @@ SuperSpinner
 2. Install packages:
    - DOTween  
    - UniRx  
-3. Open scene: `Scenes/Main.unity`  
+3. Open scene: `SuperSpinner.unity`  
 4. Press Play 🎉
 
 ---
